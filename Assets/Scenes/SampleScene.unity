@@ -10243,6 +10243,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0b90a79d4097d64f9a0012c875f1936, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animations:
+  - name: test2
+    loop: 1
+    poses:
+    - name: pos 1
+      transformValues:
+      - target: {fileID: 25010942}
+        rotation: {x: 0, y: 0, z: 0}
+        position: {x: 0, y: 0, z: 0}
+        startPosition: {x: 0, y: 0, z: 0}
+        moveSpeed: 5
+        rotationSpeed: 5
+        applyRotation: 1
+        applyPosition: 0
+      - target: {fileID: 1486619668}
+        rotation: {x: 0, y: 0, z: 0}
+        position: {x: 0, y: 0, z: 0}
+        startPosition: {x: 0, y: 0, z: 0}
+        moveSpeed: 5
+        rotationSpeed: 5
+        applyRotation: 1
+        applyPosition: 0
+    - name: pos 2
+      transformValues:
+      - target: {fileID: 25010942}
+        rotation: {x: 90, y: 0, z: 0}
+        position: {x: 0, y: 0, z: 0}
+        startPosition: {x: 0, y: 0, z: 0}
+        moveSpeed: 5
+        rotationSpeed: 100
+        applyRotation: 1
+        applyPosition: 0
+      - target: {fileID: 1486619668}
+        rotation: {x: -90, y: 0, z: 0}
+        position: {x: 0, y: 0, z: 0}
+        startPosition: {x: 0, y: 0, z: 0}
+        moveSpeed: 5
+        rotationSpeed: 100
+        applyRotation: 1
+        applyPosition: 0
+  targetAnimation: test2
 --- !u!1 &1774375296
 GameObject:
   m_ObjectHideFlags: 0
