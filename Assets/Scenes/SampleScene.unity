@@ -11138,13 +11138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0b90a79d4097d64f9a0012c875f1936, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animations:
-  - name: walk
-    loop: 1
-    Poses: []
-  - name: punch
-    loop: 0
-    Poses: []
+  animations: []
   isPlaying: 1
   targetAnimation: arm
   rotationSpeedMultiplier: 1
