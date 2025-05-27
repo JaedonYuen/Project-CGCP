@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-//authored by jaedon yuen (matric no: 2402335J)
-//this is a modular system that allows for you to make a set of poses that can be used to animate a robot
+
 
 [Serializable]
-public class transformValue 
+public class TransformValue 
 {
     public GameObject target; 
     public Vector3 rotation;
@@ -21,20 +20,20 @@ public class transformValue
     public bool applyPosition = true;
 }
 [Serializable]
-public class pose 
+public class Pose 
 {
     public string name;
-    public List<transformValue> transformValues = new List<transformValue>();
+    public List<TransformValue> TransformValues = new List<TransformValue>();
 
     
 }
 [Serializable]
 
-public class robotAnimation 
+public class RobotAnimation 
 {
     public string name;
     public bool loop = false;
-    public List<pose> poses = new List<pose>();
+    public List<Pose> Poses = new List<Pose>();
 
     
 }
@@ -42,7 +41,7 @@ public class robotAnimation
 public class robot : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    [SerializeField] public List<robotAnimation> animations = new List<robotAnimation>();
+    [SerializeField] public List<RobotAnimation> animations = new List<RobotAnimation>();
 
     public bool isPlaying = true;
     public string targetAnimation = "";
@@ -50,21 +49,19 @@ public class robot : MonoBehaviour
     public float rotationSpeedMultiplier = 1f;
     public float moveSpeedMultiplier = 1f;
     
-    private pose targetPose;
+    private Pose targetPose;
     private List<GameObject> targetsInUse = new List<GameObject>();
 
     private bool needToRest = false;
     private string animationAfterResting = "";
     void Start()
     {
-        // intialize all the poses in the robotAnimation class to have the start position of the robot
-        //also add all targets of the robot limbs in use to the targetsInUse list, this way we can track what is being animated
-        //and we can reset the robot to its start position when the animation is done
-        foreach (robotAnimation ra in animations)
+        //for some odd reason my code doesnt like forcibliy transforming the limbs back so a loophole i found is i make a default rest animation that diffrent limbs can fall back to
+        foreach (RobotAnimation robotAnimation in animations)
         {
-            foreach (pose p in ra.poses)
+            foreach (Pose p in robotAnimation.Poses)
             {
-                foreach (transformValue tv in p.transformValues)
+                foreach (TransformValue tv in p.TransformValues)
                 {
                     tv.startPosition = tv.target.transform.localPosition;
                     //add target to the list of targets in use if it is not already in the list
@@ -75,13 +72,12 @@ public class robot : MonoBehaviour
                 }
             }
         }
-        //initalise a resting animation to the robot
-        //this allows the robot to be in a resting pose when not animating
-        pose restingPose = new pose();
+        //we should initialize to prevent odd things at the start
+        Pose restingPose = new Pose();
         restingPose.name = "rest";
         foreach (GameObject target in targetsInUse)
         {
-            transformValue tv = new transformValue();
+            TransformValue tv = new TransformValue();
             tv.target = target;
             tv.startPosition = target.transform.localPosition;
             tv.rotation = Vector3.zero;
@@ -89,19 +85,19 @@ public class robot : MonoBehaviour
             tv.applyRotation = true;
             tv.applyPosition = true;
             tv.rotationSpeed = 50f;
-            restingPose.transformValues.Add(tv);
+            restingPose.TransformValues.Add(tv);
         }
-        robotAnimation restingAnimation = new robotAnimation();
+        RobotAnimation restingAnimation = new RobotAnimation();
         restingAnimation.name = "rest";
         restingAnimation.loop = true;
-        restingAnimation.poses.Add(restingPose);
+        restingAnimation.Poses.Add(restingPose);
         animations.Add(restingAnimation);
 
         
     }
 
 
-    //ball park functions allow for a tolerance to be set for comparisons since slerp isnt exactly accurate
+    //another odd thing about unity and math in general is that slerp, which is what i use to make smooth animations, isnt accurate to some degree, which makes my code a broken, but luckily i can just make these funtions to sort of give my code tolerance.
     bool ballParkRotation(Quaternion a, Quaternion b, float tolerance)
     {
         //check if the two vectors are within the tolerance of each other
@@ -117,42 +113,45 @@ public class robot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // workflow:
+        // da workflow:
         // check if a target animation is set
-        // go through all the poses in that animation
-        // init the target pose to the first pose of the animation
-        // check if the robot has achived the pose for each translation
-        // if so, we set bools to tell the rest of the code that we have achieved the pose
-        // if we have achieved the pose, we move to the next pose in the animation
-        // if there are no more poses, check if the loop bool is set to true
+        // go through all the Poses in that animation
+        // init the target Pose to the first Pose of the animation
+        // check if the robot has achived the Pose for each translation
+        // if so, we set bools to tell the rest of the code that we have achieved the Pose
+        // if we have achieved the Pose, we move to the next Pose in the animation
+        // if there are no more Poses, check if the loop bool is set to true
         // if so, we can go and set it back to the beginning
         // else, we just set it to null and stop the animation
+        //setting it to null will HOPEFULLY make it rest, as we will make sure that the null value gets changed into the rest anim
+
+        //help me this took like 3 days 
         if (isPlaying)
         {
             if (targetAnimation != "")
             {
-                robotAnimation roboAnim = animations.Find(x => x.name == targetAnimation);
+                RobotAnimation roboAnim = animations.Find(x => x.name == targetAnimation);
                 if (roboAnim != null)
                 {
                     if (needToRest)
                     {
                         // Reset the robot to the start position if the animation is not found
                         roboAnim = animations.Find(x => x.name == "rest");
-                        targetAnimation = "rest"; // Reset the target animation
+                        targetAnimation = "rest"; // rest is teh rest animation
                     }
-                    // Initialize the target pose to the first pose in the animation
+                    // Initialize the target Pose to the first Pose in the animation
                     if (targetPose == null)
                     {
-                        targetPose = roboAnim.poses[0];
+                        targetPose = roboAnim.Poses[0];
                     }
 
-                    // Aggregate flags for the entire pose
-                    bool poseAchievedRotation = true;
-                    bool poseAchievedPosition = true;
+                    // Aggregate flags for the entire Pose
+                    bool PoseAchievedRotation = true;
+                    bool PoseAchievedPosition = true;
 
-                    foreach (transformValue tv in targetPose.transformValues)
+                    foreach (TransformValue tv in targetPose.TransformValues)
                     {
-                        // Check if the robot has achieved the pose
+                        // Check if the robot has achieved the Pose
                         bool achievedRotation = !tv.applyRotation;
                         bool achievedPosition = !tv.applyPosition;
 
@@ -169,7 +168,7 @@ public class robot : MonoBehaviour
                         {
                             if (!ballParkRotation(tv.target.transform.localRotation, Quaternion.Euler(tv.rotation), 0.05f))
                             {
-                                // If not, lerp to the target pose
+                                // If not, lerp to the target Pose
                                 if (tv.useSlerp)
                                 {
                                     tv.target.transform.localRotation = Quaternion.Slerp(tv.target.transform.localRotation, Quaternion.Euler(tv.rotation), Time.deltaTime * tv.rotationSpeed * rotationSpeedMultiplier);
@@ -190,7 +189,7 @@ public class robot : MonoBehaviour
                         {
                             if (!ballParkPostion(tv.target.transform.localPosition, tv.position, 0.05f))
                             {
-                                // If not, lerp to the target pose
+                                // If not, lerp to the target Pose
                                 if (tv.useSlerp)
                                 {
                                     tv.target.transform.localPosition = Vector3.Slerp(tv.target.transform.localPosition, tv.position, Time.deltaTime * tv.moveSpeed * moveSpeedMultiplier);
@@ -208,39 +207,39 @@ public class robot : MonoBehaviour
                         }
 
                         // Update the aggregate flags
-                        poseAchievedRotation &= achievedRotation;
-                        poseAchievedPosition &= achievedPosition;
+                        PoseAchievedRotation &= achievedRotation;
+                        PoseAchievedPosition &= achievedPosition;
                     }
 
-                    // Check if the entire pose is achieved
-                    if (poseAchievedRotation && poseAchievedPosition)
+                    // Check if the entire Pose is achieved
+                    if (PoseAchievedRotation && PoseAchievedPosition)
                     {
-                        Debug.Log("Animation: "+ roboAnim.name + " achieved pose: " + targetPose.name);
+                        //Debug.Log("Animation: "+ roboAnim.name + " achieved Pose: " + targetPose.name);
                         if (needToRest)
                         {
                             needToRest = false;
                             targetAnimation = animationAfterResting; // Set the target animation to the one after resting
                             animationAfterResting = ""; // Reset the animation after resting
                         }
-                        // Move to the next pose
-                        int index = roboAnim.poses.IndexOf(targetPose);
-                        if (index < roboAnim.poses.Count - 1)
+                        // Move to the next Pose
+                        int index = roboAnim.Poses.IndexOf(targetPose);
+                        if (index < roboAnim.Poses.Count - 1)
                         {
-                            targetPose = roboAnim.poses[index + 1];
+                            targetPose = roboAnim.Poses[index + 1];
                         }
                         else
                         {
                             if (roboAnim.loop)
                             {
-                                // If the animation is looping, go back to the first pose
-                                targetPose = roboAnim.poses[0];
+                                // If the animation is looping, go back to the first Pose
+                                targetPose = roboAnim.Poses[0];
                             }
                             else
                             {
                                 // If the animation is not looping, stop the animation
                                 targetPose = null;
                                 targetAnimation = ""; // Reset the target animation
-                                Debug.Log("Animation completed: " + roboAnim.name);
+                                //Debug.Log("Animation completed: " + roboAnim.name);
                             }
                         }
 
@@ -248,7 +247,7 @@ public class robot : MonoBehaviour
                     }
                     else
                     {
-                        Debug.Log( "Animation: "+ roboAnim.name + " not achieved pose: " + targetPose.name + ", Results: " + "achievedRotation: " + poseAchievedRotation + ", achievedPosition: " + poseAchievedPosition);
+                        //Debug.Log( "Animation: "+ roboAnim.name + " not achieved Pose: " + targetPose.name + ", Results: " + "achievedRotation: " + PoseAchievedRotation + ", achievedPosition: " + PoseAchievedPosition);
                     }
                 }
                 else

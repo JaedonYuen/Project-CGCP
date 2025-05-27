@@ -42,7 +42,7 @@ Properties {
 	_WeightNormal		("Weight Normal", float) = 0
 	_WeightBold			("Weight Bold", float) = 0.5
 
-	// Should not be directly exposed to the user
+	// Should not be directly exPosed to the user
 	_ShaderFlags		("Flags", float) = 0
 	_ScaleRatioA		("Scale RatioA", float) = 1
 	_ScaleRatioB		("Scale RatioB", float) = 1
