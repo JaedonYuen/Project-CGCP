@@ -1,16 +1,13 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System;
-using Unity.VisualScripting;
-using UnityEditor.IMGUI.Controls;
 
-// written by Jaedon Yuen
-// This script is a simple framework that allows for animating game objects in my mecha robot model.
-// It uses tables and custom classes to store varables, and the script will parse the animations and animate it.
+
+
+
+// This script uses tables and custom classes to store varables, and the script will parse the animations and animate it.
 
 // Animations essenially sets targets for diffrent limbs to move to, and the core of ths script will dynamically animate based on these targets i set with the animations, allowing me to dynamically change targets on the fly, allowing me to dynamically add, remove, and change andimations with out issue.
-// this took me so long help me
 
 // these classes help store and organize the animation data
 [Serializable]
@@ -22,7 +19,7 @@ public class TransformValue // transform values help store values as well as how
     public Vector3 startPosition;
     public float moveSpeed = 5f;
     public float rotationSpeed = 5f;
-    public bool useSlerp = true;
+    public bool interpolate = true;
 
     public bool applyRotation = false;
     public bool applyPosition = false;
@@ -37,7 +34,7 @@ public class Pose // poses just store transform values
 }
 [Serializable]
 
-public class RobotAnimation // robot animations store poses and give it a name, allowing for nice organization, because I im already very disorganized. It also determins if an animation should loop or not.
+public class MechAnimation // robot animations store poses and give it a name, allowing for nice organization, because I im already very disorganized. It also determins if an animation should loop or not.
 {
     public string name;
     public bool loop = false;
@@ -46,17 +43,17 @@ public class RobotAnimation // robot animations store poses and give it a name, 
     
 }
 
-public class robot : MonoBehaviour
+public class Mech : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    [SerializeField] public List<RobotAnimation> animations = new List<RobotAnimation>();
+    [SerializeField] public List<MechAnimation> animations = new List<MechAnimation>();
 
     public bool isPlaying = true;
     private string targetAnimation = "";
 
-    public float rotationSpeedMultiplier = 1f;
-    public float moveSpeedMultiplier = 1f;
-    
+    private float rotationSpeedMultiplier = 1f;
+    private float moveSpeedMultiplier = 1f;
+
     private Pose targetPose;
     private List<GameObject> targetsInUse = new List<GameObject>();
 
@@ -77,15 +74,14 @@ public class robot : MonoBehaviour
         //check if the two vectors are within the tolerance of each other
         return Vector3.Distance(a, b) < poseTolerance;
     }
-        // -- ANIMATONS -- //
-        // i felt like storing in the values in a table would make the code a bit more modular, allowing for anything to be animated.
-        // make some animations, we do this first so that we can see the used limbs when adding the rest animation
-        // fun fact, previously i would have used the unity table system but i felt that it wasnt very "code in the animations" so i just ported them here.
+    // -- ANIMATONS -- //
+    // i felt like storing in the values in a table would make the code a bit more modular, allowing for anything to be animated.
+    // make some animations, we do this first so that we can see the used limbs when adding the rest animation
     void Awake()
     {
-       
+
         // walking // 
-        RobotAnimation walkingAnimation = new RobotAnimation(); // create main animation
+        MechAnimation walkingAnimation = new MechAnimation(); // create main animation
         walkingAnimation.name = "walk";
         walkingAnimation.loop = true;
 
@@ -116,11 +112,6 @@ public class robot : MonoBehaviour
         walkP1LRLeg.applyRotation = true;
         walkPose1.TransformValues.Add(walkP1LRLeg);
 
-        TransformValue walkP1LTorso = new TransformValue(); // turn upper torso
-        walkP1LTorso.target = GameObject.Find("LowerTorso");
-        walkP1LTorso.rotation = new Vector3(0, -30, 0);
-        walkP1LTorso.applyRotation = true;
-        walkPose1.TransformValues.Add(walkP1LTorso);
 
         TransformValue walkP1Head = new TransformValue(); // turn head to look forward
         walkP1Head.target = GameObject.Find("Head");
@@ -130,7 +121,7 @@ public class robot : MonoBehaviour
         // next set of values just make the arms a bit less stiff looking 
         TransformValue walkP1RShoulder = new TransformValue();
         walkP1RShoulder.target = GameObject.Find("RightShoulder");
-        walkP1RShoulder.rotation = new Vector3(0, 0, -5);
+        walkP1RShoulder.rotation = new Vector3(-30, 0, -5);
         walkP1RShoulder.applyRotation = true;
         walkPose1.TransformValues.Add(walkP1RShoulder);
 
@@ -148,7 +139,7 @@ public class robot : MonoBehaviour
 
         TransformValue walkP1LShoulder = new TransformValue();
         walkP1LShoulder.target = GameObject.Find("LeftShoulder");
-        walkP1LShoulder.rotation = new Vector3(0, 0, 5);
+        walkP1LShoulder.rotation = new Vector3(30, 0, 5);
         walkP1LShoulder.applyRotation = true;
         walkPose1.TransformValues.Add(walkP1LShoulder);
 
@@ -192,25 +183,30 @@ public class robot : MonoBehaviour
         walkP2LLLeg.applyRotation = true;
         walkPose2.TransformValues.Add(walkP2LLLeg);
 
-        TransformValue walkP2LTorso = new TransformValue(); // turn lower torso
-        walkP2LTorso.target = GameObject.Find("LowerTorso");
-        walkP2LTorso.rotation = new Vector3(0, 30, 0);
-        walkP2LTorso.applyRotation = true;
-        walkPose2.TransformValues.Add(walkP2LTorso);
-
         TransformValue walkP2Head = new TransformValue(); // turn head to look forward
         walkP2Head.target = GameObject.Find("Head");
         walkP2Head.rotation = new Vector3(0, -30, 0);
         walkP2Head.applyRotation = true;
         walkPose2.TransformValues.Add(walkP2Head);
 
+        TransformValue walkP2RShoulder = new TransformValue(); // swing the arms
+        walkP2RShoulder.target = GameObject.Find("RightShoulder");
+        walkP2RShoulder.rotation = new Vector3(30, 0, 5);
+        walkP2RShoulder.applyRotation = true;
+        walkPose2.TransformValues.Add(walkP2RShoulder);
+
+        TransformValue walkP2LShoulder = new TransformValue();
+        walkP2LShoulder.target = GameObject.Find("LeftShoulder");
+        walkP2LShoulder.rotation = new Vector3(-30, 0, 5);
+        walkP2LShoulder.applyRotation = true;
+        walkPose2.TransformValues.Add(walkP2LShoulder);
 
         walkingAnimation.Poses.Add(walkPose2); // add the pose
 
         animations.Add(walkingAnimation); // add the animation
 
         // Punching //
-        RobotAnimation punchingAnimation = new RobotAnimation(); // create main animation
+        MechAnimation punchingAnimation = new MechAnimation(); // create main animation
         punchingAnimation.name = "punch";
         punchingAnimation.loop = false;
 
@@ -288,7 +284,41 @@ public class robot : MonoBehaviour
         punchP2Head.rotationSpeed = punchSpeed;
         punchPose2.TransformValues.Add(punchP2Head);
 
-        punchingAnimation.Poses.Add(punchPose2); // add the pose
+        TransformValue punchP2Hips = new TransformValue(); //move the robot forward for that extra punch effect
+        punchP2Hips.target = GameObject.Find("Hips");
+        punchP2Hips.position = new Vector3(0, 17.25f, -10f); // move the hips forward
+        punchP2Hips.applyPosition = true;
+        punchP2Hips.moveSpeed = punchSpeed; // set the speed to the same speed as the punch
+        punchPose2.TransformValues.Add(punchP2Hips);
+
+        TransformValue punchP2ULLegs = new TransformValue(); // turn the legs for a more dynamic look
+        punchP2ULLegs.target = GameObject.Find("UpperLeftLeg");
+        punchP2ULLegs.rotation = new Vector3(-12,3,13); 
+        punchP2ULLegs.applyRotation = true;
+        punchP2ULLegs.rotationSpeed = punchSpeed;
+        punchingAnimation.Poses.Add(punchPose2); 
+
+        TransformValue punchP2URLegs = new TransformValue(); 
+        punchP2URLegs.target = GameObject.Find("UpperRightLeg");
+        punchP2URLegs.rotation = new Vector3(29,5,-17);
+        punchP2URLegs.applyRotation = true;
+        punchP2URLegs.rotationSpeed = punchSpeed;
+        punchPose2.TransformValues.Add(punchP2URLegs);
+
+        TransformValue punchP2LLLegs = new TransformValue(); 
+        punchP2LLLegs.target = GameObject.Find("LowerLeftLeg");
+        punchP2LLLegs.rotation = new Vector3(-36, 0, 0);
+        punchP2LLLegs.applyRotation = true;
+        punchP2LLLegs.rotationSpeed = punchSpeed;
+        punchPose2.TransformValues.Add(punchP2LLLegs);
+
+        punchPose2.TransformValues.Add(punchP2LLLegs);
+        TransformValue punchP2LRLegs = new TransformValue(); 
+        punchP2LRLegs.target = GameObject.Find("LowerRightLeg");
+        punchP2LRLegs.rotation = new Vector3(-58, 0, 0);
+        punchP2LRLegs.applyRotation = true;
+        punchP2LRLegs.rotationSpeed = punchSpeed;
+        punchPose2.TransformValues.Add(punchP2LRLegs);
 
         Pose punchPose3 = new Pose(); // pose 3, retract arm
         punchPose3.name = "punchP3";
@@ -307,7 +337,7 @@ public class robot : MonoBehaviour
 
         TransformValue punchP3RForarm = new TransformValue(); // raise right forearm up
         punchP3RForarm.target = GameObject.Find("RightForearm");
-        punchP3RForarm.rotation = new Vector3(0, -90, 0);
+        punchP3RForarm.rotation = new Vector3(100, 0, 0);
         punchP3RForarm.applyRotation = true;
         punchPose3.TransformValues.Add(punchP3RForarm);
 
@@ -327,7 +357,7 @@ public class robot : MonoBehaviour
         punchingAnimation.Poses.Add(punchPose3); // add the pose
 
         animations.Add(punchingAnimation); // add the animation
-        
+
 
         // -- ANIMATONS END -- //
     }
@@ -336,9 +366,9 @@ public class robot : MonoBehaviour
     {
         // A resting animation that the robot will use to reset itself to a neutral position once its done animating.
         // this will be used to reset the robot to a neutral position, so that it can be used for other animations
-        foreach (RobotAnimation robotAnimation in animations)
+        foreach (MechAnimation MechAnimation in animations)
         {
-            foreach (Pose p in robotAnimation.Poses)
+            foreach (Pose p in MechAnimation.Poses)
             {
                 foreach (TransformValue transform in p.TransformValues)
                 {
@@ -353,7 +383,7 @@ public class robot : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning("Transform target is null for " + transform.target + " in animation " + robotAnimation.name + " pose " + p.name);
+                        Debug.LogWarning("Transform target is null for " + transform.target + " in animation " + MechAnimation.name + " pose " + p.name);
                     }
                 }
             }
@@ -374,26 +404,29 @@ public class robot : MonoBehaviour
             transform.moveSpeed = 20f;
             restingPose.TransformValues.Add(transform);
         }
-        RobotAnimation restingAnimation = new RobotAnimation();
+        MechAnimation restingAnimation = new MechAnimation();
         restingAnimation.name = "rest";
         restingAnimation.loop = true;
         restingAnimation.Poses.Add(restingPose);
         animations.Add(restingAnimation);
 
-        
 
 
 
 
 
-        
+
+
     }
 
 
-    
+
     // Update is called once per frame
     void Update()
     {
+        // this is the core of the animation system.
+        // It dynaically animates the robot based on the targets i set, which is the current animation.
+        // It will loop throught the poses and uses unity's lerp functions to smoothly animate the robot (if it calls for it, if it doesnt, it will just linearly animate.)
         // da workflow:
         // check if a target animation is set
         // go through all the Poses in that animation
@@ -406,12 +439,11 @@ public class robot : MonoBehaviour
         // else, we just set it to null and stop the animation
         // setting it to null will HOPEFULLY make it rest, as we will make sure that the null value gets changed into the rest anim
 
-        // help me this took like 3 days 
         if (isPlaying)
         {
             if (targetAnimation != "")
             {
-                RobotAnimation roboAnim = animations.Find(x => x.name == targetAnimation);
+                MechAnimation roboAnim = animations.Find(x => x.name == targetAnimation);
                 if (roboAnim != null)
                 {
                     if (needToRest)
@@ -430,59 +462,56 @@ public class robot : MonoBehaviour
                     bool PoseAchievedRotation = true;
                     bool PoseAchievedPosition = true;
 
-                    List<string> whoHasAchivedPose = new List<string>();
 
-                    foreach (TransformValue tv in targetPose.TransformValues)
+                    foreach (TransformValue transformValue in targetPose.TransformValues)
                     {
                         // Check if the robot has achieved the Pose
-                        bool achievedRotation = !tv.applyRotation;
-                        bool achievedPosition = !tv.applyPosition;
+                        bool achievedRotation = !transformValue.applyRotation;
+                        bool achievedPosition = !transformValue.applyPosition;
 
                         // check if the animation changed midway through
                         if (targetAnimation != roboAnim.name)
                         {
                             // Reset the robot to the start position if the animation is not found
                             targetAnimation = "rest"; // Reset the target animation
-                            resetPose();
                             return;
                         }
 
 
-                        if (tv.applyRotation)
+                        if (transformValue.applyRotation)
                         {
-                            if (!ballParkRotation(tv.target.transform.localRotation, Quaternion.Euler(tv.rotation)))
+                            if (!ballParkRotation(transformValue.target.transform.localRotation, Quaternion.Euler(transformValue.rotation)))
                             {
                                 // If not, lerp to the target Pose
-                                if (tv.useSlerp)
+                                float finalSpeed = Time.deltaTime * transformValue.rotationSpeed * rotationSpeedMultiplier;
+                                if (transformValue.interpolate)
                                 {
-                                    
-                                    tv.target.transform.localRotation = Quaternion.Slerp(tv.target.transform.localRotation, Quaternion.Euler(tv.rotation), Time.deltaTime * tv.rotationSpeed * rotationSpeedMultiplier);
+                                    transformValue.target.transform.Rotate(transformValue.rotation, Space.Self);
                                 }
                                 else
                                 {
-                                    tv.target.transform.localRotation = Quaternion.RotateTowards(tv.target.transform.localRotation, Quaternion.Euler(tv.rotation), Time.deltaTime * tv.rotationSpeed * rotationSpeedMultiplier);
+                                    transformValue.target.transform.localRotation = Quaternion.RotateTowards(transformValue.target.transform.localRotation, Quaternion.Euler(transformValue.rotation), Time.deltaTime * transformValue.rotationSpeed * rotationSpeedMultiplier);
                                 }
 
                             }
                             else
                             {
                                 achievedRotation = true;
-                                whoHasAchivedPose.Add(tv.target.name); //debug 
                             }
                         }
 
-                        if (tv.applyPosition)
+                        if (transformValue.applyPosition)
                         {
-                            if (!ballParkPostion(tv.target.transform.localPosition, tv.position))
+                            if (!ballParkPostion(transformValue.target.transform.localPosition, transformValue.position))
                             {
                                 // If not, lerp to the target Pose
-                                if (tv.useSlerp)
+                                if (transformValue.interpolate)
                                 {
-                                    tv.target.transform.localPosition = Vector3.Slerp(tv.target.transform.localPosition, tv.position, Time.deltaTime * tv.moveSpeed * moveSpeedMultiplier);
+                                    transformValue.target.transform.localPosition = Vector3.Slerp(transformValue.target.transform.localPosition, transformValue.position, Time.deltaTime * transformValue.moveSpeed * moveSpeedMultiplier);
                                 }
                                 else
                                 {
-                                    tv.target.transform.localPosition = Vector3.MoveTowards(tv.target.transform.localPosition, tv.position, Time.deltaTime * tv.moveSpeed * moveSpeedMultiplier);
+                                    transformValue.target.transform.localPosition = Vector3.MoveTowards(transformValue.target.transform.localPosition, transformValue.position, Time.deltaTime * transformValue.moveSpeed * moveSpeedMultiplier);
                                 }
 
                             }
@@ -498,7 +527,6 @@ public class robot : MonoBehaviour
                     }
 
                     // Check if the entire Pose is achieved
-                    Debug.Log(whoHasAchivedPose.ToArray()); //debug
                     if (PoseAchievedRotation && PoseAchievedPosition)
                     {
                         Debug.Log("Animation: " + roboAnim.name + " achieved Pose: " + targetPose.name);
@@ -554,22 +582,19 @@ public class robot : MonoBehaviour
 
     }
 
-    void resetPose()
-    {
-        foreach(GameObject target in targetsInUse)
-        {
-            // Reset the target to its start position
-            //target.transform.localPosition = target.transform.localPosition;
-            target.transform.localRotation = Quaternion.Euler(Vector3.zero);
-        }
-    }
 
-    public void setTargetAnimation(string animationName)
+    public void SetTargetAnimation(string animationName)
     {
         // Set the target animation to the specified name
         needToRest = true;
         animationAfterResting = animationName;
     }
 
-    
+    public void SetSpeed(float speed)
+    {
+        moveSpeedMultiplier = speed;
+        rotationSpeedMultiplier = speed;
+    }
+
+
 }
