@@ -459,8 +459,8 @@ public class Mech : MonoBehaviour
                     }
 
                     // check bools to see if the transform has been achived
-                    bool PoseAchievedRotation = true;
-                    bool PoseAchievedPosition = true;
+                    bool poseAchievedRotation = true;
+                    bool poseAchievedPosition = true;
 
 
                     foreach (TransformValue transformValue in targetPose.TransformValues)
@@ -483,10 +483,10 @@ public class Mech : MonoBehaviour
                             if (!ballParkRotation(transformValue.target.transform.localRotation, Quaternion.Euler(transformValue.rotation)))
                             {
                                 // If not, lerp to the target Pose
-                                float finalSpeed = Time.deltaTime * transformValue.rotationSpeed * rotationSpeedMultiplier;
+                                
                                 if (transformValue.interpolate)
                                 {
-                                    transformValue.target.transform.Rotate(transformValue.rotation, Space.Self);
+                                    transformValue.target.transform.localRotation = Quaternion.Slerp(transformValue.target.transform.localRotation, Quaternion.Euler(transformValue.rotation), Time.deltaTime * transformValue.rotationSpeed * rotationSpeedMultiplier);
                                 }
                                 else
                                 {
@@ -522,12 +522,12 @@ public class Mech : MonoBehaviour
                         }
 
                         // use a bitwise and to update the bools as needed. If i have achived rotation for one limb but another limb isnt then we havent achived full proper pose.
-                        PoseAchievedRotation &= achievedRotation;
-                        PoseAchievedPosition &= achievedPosition;
+                        poseAchievedRotation &= achievedRotation;
+                        poseAchievedPosition &= achievedPosition;
                     }
 
                     // Check if the entire Pose is achieved
-                    if (PoseAchievedRotation && PoseAchievedPosition)
+                    if (poseAchievedRotation && poseAchievedPosition)
                     {
                         Debug.Log("Animation: " + roboAnim.name + " achieved Pose: " + targetPose.name);
                         if (needToRest)
@@ -554,7 +554,7 @@ public class Mech : MonoBehaviour
                                 // If the animation is not looping, stop the animation
                                 targetPose = null;
                                 targetAnimation = ""; // Reset the target animation
-                                Debug.Log("Animation completed: " + roboAnim.name);
+                                //Debug.Log("Animation completed: " + roboAnim.name);
                             }
                         }
 
@@ -562,7 +562,7 @@ public class Mech : MonoBehaviour
                     }
                     else
                     {
-                        Debug.Log("Animation: " + roboAnim.name + " not achieved Pose: " + targetPose.name + ", Results: " + "achievedRotation: " + PoseAchievedRotation + ", achievedPosition: " + PoseAchievedPosition);
+                        //Debug.Log("Animation: " + roboAnim.name + " not achieved Pose: " + targetPose.name + ", Results: " + "achievedRotation: " + poseAchievedRotation + ", achievedPosition: " + poseAchievedPosition);
                     }
                 }
                 else
