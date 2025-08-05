@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System;
 
 
-
-
 // This script uses tables and custom classes to store varables, and the script will parse the animations and animate it.
 
 // Animations essenially sets targets for diffrent limbs to move to, and the core of ths script will dynamically animate based on these targets i set with the animations, allowing me to dynamically change targets on the fly, allowing me to dynamically add, remove, and change andimations with out issue.
